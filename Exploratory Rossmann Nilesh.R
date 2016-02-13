@@ -176,39 +176,41 @@ table(store$PromoInterval)
 
 # Merge store and train 
 train_store <- merge(train, store, by = "Store")
+
+#sales by promo interval
 ggplot(train_store[Sales != 0], aes(x = factor(PromoInterval), y = Sales)) + 
   geom_jitter(alpha = 0.1) + 
   geom_boxplot(color = "blue", outlier.colour = NA, fill = NA)
 
-
+#sales by storetype
 ggplot(train_store[Sales != 0], 
        aes(x = as.Date(Date), y = Sales, color = factor(StoreType))) + 
   geom_smooth(size = 2)
 
 
-
+#cust by storetype
 ggplot(train_store[Customers != 0], 
        aes(x = as.Date(Date), y = Customers, color = factor(StoreType))) + 
   geom_smooth(size = 2)
 
-
+#sales by assortment
 ggplot(train_store[Sales != 0], 
        aes(x = as.Date(Date), y = Sales, color = factor(Assortment))) + 
   geom_smooth(size = 2)
 
-
+#customers by assortment
 ggplot(train_store[Sales != 0], 
        aes(x = as.Date(Date), y = Customers, color = factor(Assortment))) + 
   geom_smooth(size = 2)
 
-
+#sales by competition distance
 salesByDist <- aggregate(train_store[Sales != 0 & !is.na(CompetitionDistance)]$Sales, 
                          by = list(train_store[Sales != 0 & !is.na(CompetitionDistance)]$CompetitionDistance), mean)
 colnames(salesByDist) <- c("CompetitionDistance", "MeanSales")
 ggplot(salesByDist, aes(x = log(CompetitionDistance), y = log(MeanSales))) + 
   geom_point() + geom_smooth()
 
-
+# 
 ggplot(train_store[Sales != 0],
        aes(x = factor(!is.na(CompetitionOpenSinceYear)), y = Sales)) +
   geom_jitter(alpha = 0.1) +
