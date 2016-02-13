@@ -210,7 +210,7 @@ colnames(salesByDist) <- c("CompetitionDistance", "MeanSales")
 ggplot(salesByDist, aes(x = log(CompetitionDistance), y = log(MeanSales))) + 
   geom_point() + geom_smooth()
 
-# 
+# sales vs comp-true/false
 ggplot(train_store[Sales != 0],
        aes(x = factor(!is.na(CompetitionOpenSinceYear)), y = Sales)) +
   geom_jitter(alpha = 0.1) +
@@ -255,10 +255,9 @@ temp <- temp[, .(MonthlySalesMean = mean(Sales / (StoreMean)) * 100),
 temp <- as.data.frame(temp)
 SalesTS <- ts(temp$MonthlySalesMean, start=2013, frequency=12)
 col = rainbow(3)
+
+#seasonality sales graph
 seasonplot(SalesTS, col=col, year.labels.left = TRUE, pch=19, las=1)
 
 str(train_store)
 head(train_store)
-=======
-
->>>>>>> 6f3318924679dc7a94ff126bef8cfe80b20355fe
