@@ -1,0 +1,21 @@
+Cleaning?
+- can we combine any features? like assortment types, store type?
+	- check sales diff. - if not significant then combine
+
+- Any weird values? - clean by mean, mod, etc..
+
+- Broad categories? - wrong naming can be combined? like >>>> low Fat = LF, Regular = reg
+
+- 
+- CompetitionDistance NA's are only 2516; although CompetitionOpenSince NA's are 276100; so there are lot of missing values.
+
+- No need to worry about 433719 NA's in Promo2Since, as Promo2 =0 is exactly for 433719 records, meaning for these records, promosince data is not available which is rightly should not be available
+
+
+
+
+combining year mon in- competitionsince, promosince
+
+
+column for how many days since the promo started?
+column for how many days since competition started?

@@ -31,7 +31,9 @@ summary(test)
 train[, lapply(.SD, function(x) length(unique(x)))]
 test[, lapply(.SD, function(x) length(unique(x)))]
 
-# All test stores are also in the train data
+train[unique(train$StateHoliday)]
+
+sha# All test stores are also in the train data
 sum(unique(test$Store) %in% unique(train$Store)) 
 
 # All the train stores are in the test data
@@ -261,3 +263,36 @@ seasonplot(SalesTS, col=col, year.labels.left = TRUE, pch=19, las=1)
 
 str(train_store)
 head(train_store)
+write.csv(summary(train_store), "train_store_summary.csv",row.names=F)
+
+#converting categorical data in factors
+train_store$Store= as.factor(train_store$Store)
+train_store$DayOfWeek= as.factor(train_store$DayOfWeek)
+train_store$Open = as.factor(train_store$Open)
+train_store$Promo = as.factor(train_store$Promo)
+train_store$StateHoliday = as.factor(train_store$StateHoliday)
+train_store$SchoolHoliday = as.factor(train_store$SchoolHoliday)
+train_store$StoreType = as.factor(train_store$StoreType)
+train_store$Assortment = as.factor(train_store$Assortment)
+train_store$Promo2 = as.factor(train_store$Promo2)
+
+write.csv(summary(train_store), "train_store_summary1.csv",row.names=F)
+
+str(test)
+
+#merging test and store to apply model
+test_store <- merge(test, store, by = "Store")
+
+test_store$Store= as.factor(test_store$Store)
+test_store$DayOfWeek= as.factor(test_store$DayOfWeek)
+test_store$Open = as.factor(test_store$Open)
+test_store$Promo = as.factor(test_store$Promo)
+test_store$StateHoliday = as.factor(test_store$StateHoliday)
+test_store$SchoolHoliday = as.factor(test_store$SchoolHoliday)
+
+test_store$StoreType = as.factor(test_store$StoreType)
+test_store$Assortment = as.factor(test_store$Assortment)
+test_store$Promo2 = as.factor(test_store$Promo2)
+
+str(test_store)
+
