@@ -296,3 +296,18 @@ test_store$Promo2 = as.factor(test_store$Promo2)
 
 str(test_store)
 
+library(dplyr)
+mdl1_gm_train = train_store
+mdl1_gm_test = test_store
+mdl1_gm_train = mdl1_gm_train[mdl1_gm_train$Sales>0,]
+
+mdl1_grpbyvars=c('Store','DayOfWeek','Promo')
+
+mdl1 = mdl1_gm_train %>% group_by_(.dots=mdl1_grpbyvars) %>% summarise(mdl1_grpbyvarsales=exp(mean(log(Sales)))) %>% ungroup()
+
+mdl1_predictions = mdl1_gm_test %>% left_join(mdl1,by=mdl1_grpbyvars) %>% select(Id,mdl1_grpbyvarsales) %>% rename(Sales=mdl1_grpbyvarsales)
+
+mdl1_predictions$Sales[is.na(mdl1_predictions$Sales)]=0
+
+write.csv(mdl1_gm_predictions, "mdl1_predictions.csv",row.names=F)
+
