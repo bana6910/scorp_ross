@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 library(data.table)
 library(zoo)
 
@@ -256,3 +257,6 @@ seasonplot(SalesTS, col=col, year.labels.left = TRUE, pch=19, las=1)
 
 str(train_store)
 head(train_store)
+=======
+
+>>>>>>> 6f3318924679dc7a94ff126bef8cfe80b20355fe
