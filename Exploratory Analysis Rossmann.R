@@ -296,18 +296,27 @@ test_store$Promo2 = as.factor(test_store$Promo2)
 
 str(test_store)
 
+##111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
 library(dplyr)
 mdl1_gm_train = train_store
 mdl1_gm_test = test_store
 mdl1_gm_train = mdl1_gm_train[mdl1_gm_train$Sales>0,]
 
+#defining vector for group by vars
 mdl1_grpbyvars=c('Store','DayOfWeek','Promo')
 
+#applying sales by group by vars on train
 mdl1 = mdl1_gm_train %>% group_by_(.dots=mdl1_grpbyvars) %>% summarise(mdl1_grpbyvarsales=exp(mean(log(Sales)))) %>% ungroup()
 
+#applying learning of model in test
 mdl1_predictions = mdl1_gm_test %>% left_join(mdl1,by=mdl1_grpbyvars) %>% select(Id,mdl1_grpbyvarsales) %>% rename(Sales=mdl1_grpbyvarsales)
 
+#making null values to zero
 mdl1_predictions$Sales[is.na(mdl1_predictions$Sales)]=0
 
+#writing model1 predictions in csv
 write.csv(mdl1_gm_predictions, "mdl1_predictions.csv",row.names=F)
 
+####11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+
+## Cleaning Data
