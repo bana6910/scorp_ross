@@ -21,6 +21,7 @@ head(test); tail(test)
 train[, Date := as.Date(Date,"%m/%d/%Y")]
 test[, Date := as.Date(Date)]
 
+train$Date  = as.Date(train$Date,"%m/%d/%Y")
 
 train <- train[order(Date)]
 test <- test[order(Date)]
@@ -30,7 +31,6 @@ summary(test)
 # Unique values per column
 train[, lapply(.SD, function(x) length(unique(x)))]
 test[, lapply(.SD, function(x) length(unique(x)))]
-
 
 
 # All test stores are also in the train data
@@ -222,7 +222,7 @@ ggplot(train_store[Sales != 0],
 # Sales before and after competition opens
 train_store$DateYearmon <- as.yearmon(train_store$Date)
 train_store <- train_store[order(Date)]
-timespan <- 100 # Days to collect before and after Opening of competition
+timespan <- 300 # Days to collect before and after Opening of competition
 beforeAndAfterComp <- function(s) {
   x <- train_store[Store == s]
   daysWithComp <- x$CompetitionOpenSince >= x$DateYearmon
@@ -321,6 +321,9 @@ write.csv(mdl1_gm_predictions, "mdl1_predictions.csv",row.names=F)
 ## Cleaning Data
 str(train_store)
 
+f_train_store = train_store
+f_store = store
+
 #In stores data we have Three stores with Store numbers 81, 862 and 957 has competition distance == NA
 sum(is.na(store$CompetitionDistance))
 store[is.na(CompetitionDistance)]
@@ -330,27 +333,48 @@ sum(is.na(store$CompetitionOpenSinceYear))
 
 # Thats why in train data we have CompetitionDistance NA's are only 2516;
 #although CompetitionOpenSince NA's are 276100; so there are lot of missing values.
-sum(is.na(train_store$CompetitionDistance))
-sum(is.na(train_store$CompetitionOpenSinceYear))
+sum(is.na(f_train_store$CompetitionDistance))
+sum(is.na(f_train_store$CompetitionOpenSinceYear))
 
-sum(is.na(train_store$CompetitionDistance))
-sum(is.na(train_store$CompetitionOpenSinceYear))
 
-train[Sales != 0 & DayOfWeek==7]
-store[is.na(CompetitionDistance)]
+#imputing Avg compDistance i.e. 5382 where it's NA and avg compopensince i.e. Apr 2009 where it's NA
+nrow(f_train_store[is.na(f_train_store$CompetitionDistance)])
+
+f_train_store$CompetitionDistance[is.na(f_train_store$CompetitionDistance)] = 5382
+f_train_store$CompetitionOpenSinceMonth[is.na(f_train_store$CompetitionOpenSinceMonth)] = 4
+f_train_store$CompetitionOpenSinceYear[is.na(f_train_store$CompetitionOpenSinceYear)] = 2009
+
+f_train_store$CompetitionOpenSince <- as.yearmon(paste(f_train_store$CompetitionOpenSinceYear, 
+                                               f_train_store$CompetitionOpenSinceMonth, sep = "-"))
+
+#so now we have 0 missing values for compdistance and opensince year/month
+sum(is.na(f_train_store$CompetitionDistance))
+sum(is.na(f_train_store$CompetitionOpenSinceYear))
+
+#replicating above code in f_store
+sum(is.na(f_store$CompetitionDistance))
+sum(is.na(f_store$CompetitionOpenSinceYear))
+
+f_store$CompetitionDistance[is.na(f_store$CompetitionDistance)] = 5382
+f_store$CompetitionOpenSinceMonth[is.na(f_store$CompetitionOpenSinceMonth)] = 4
+f_store$CompetitionOpenSinceYear[is.na(f_store$CompetitionOpenSinceYear)] = 2009
+
+f_store$CompetitionOpenSince <- as.yearmon(paste(f_store$CompetitionOpenSinceYear, 
+                                                 f_store$CompetitionOpenSinceMonth, sep = "-"))
+sum(is.na(f_store$CompetitionDistance))
+sum(is.na(f_store$CompetitionOpenSinceYear))
+
 
 # In these 861 cases the 143 unique stores were open even though it was stateholiday; not error but exceptional stores
 # We will add column named exceptional store if the store is open in case of stateholiday to train and test data 
-openstores_on_stateHolidays = train_store[Open == 1 & StateHoliday != 0]
+openstores_on_stateHolidays = f_train_store[Open == 1 & StateHoliday != 0]
+nrow(openstores_on_stateHolidays)
+
 unique(openstores_on_stateHolidays$Store)
 
 
 # For 166,190 cases the store is not continuing with promo2 eventhough they ran promo1
-train_store[Promo == 1 & Promo2==0]
-
-
-#work on f_train_store for adding features and
-f_train_store = train_store
+f_train_store[Promo == 1 & Promo2==0]
 
 
 #Added How Many days since promo started column: promo2Days
@@ -358,9 +382,28 @@ f_train_store = train_store
 #convert promo2Since to date format
 f_train_store$Promo2Since = as.Date(f_train_store$Promo2Since)
 
+
+str(f_train_store)
+sum(is.na(f_train_store$Promo2Since))
+
+min(f_train_store$Date)
+max(f_train_store$Date)
+
+
+sum(is.na(f_train_store$Promo2Since))
+f_train_store$Promo2Since[is.na(f_train_store$Promo2Since)] = f_train_store$Date[is.na(f_train_store$Promo2Since)] +1500
+sum(is.na(f_train_store$Promo2Since))
+
 #Added promo2Days column = diff of days bet current store date - promo started date 
 # Negative value means how many days after that day the promo will start
 f_train_store$promo2Days = f_train_store$Date - f_train_store$Promo2Since
+
+remove(abc)
+abc = f_train_store
+
+abc$Promo2SinceYear =  format(abc$Promo2Since, "%Y")
+abc$Promo2SinceWeek =  format(abc$Promo2Since, "%W") 
+
 
 
 #Promo Interval - Each round started month; so we can add column of promo2 round Number x started and 
@@ -385,12 +428,6 @@ nrow(f_train_store[SchoolHoliday == 1 & StateHoliday != 0])
 # 13889 state holiday
 
 #= values[match()]
-
-
-dd$seg[dd$x2> 0 && dd$x3> 200] <-1
-
-
-
 
 
 f_train_store$schoolOff  <- sapply(f_train_store,isSchoolOff)
