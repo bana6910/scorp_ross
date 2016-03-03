@@ -6,16 +6,39 @@ Cleaning?
 
 - Broad categories? - wrong naming can be combined? like >>>> low Fat = LF, Regular = reg
 
-- 
 - CompetitionDistance NA's are only 2516; although CompetitionOpenSince NA's are 276100; so there are lot of missing values.
 
 - No need to worry about 433719 NA's in Promo2Since, as Promo2 =0 is exactly for 433719 records, meaning for these records, promosince data is not available which is rightly should not be available
 
-
-
+- State Holiday a = public holiday; all schools are closed on public holidays
 
 combining year mon in- competitionsince, promosince
+as.numeric(as.POSIXct("2015-10-01", format = "%Y-%m-%d") - store$Promo2Since)
 
 
+Desktop
 column for how many days since the promo started?
 column for how many days since competition started?
+
+train[, lapply(.SD, function(x) length(unique(x)))]
+
+with(train[train$Sales != 0 & train$Promo == 0], mean(Sales / Customers))
+
+
+table(ifelse(train$Sales != 0, "Sales > 0", "Sales = 0"),
+      ifelse(train$Promo, "Promo", "No promo"))
+
+
+table(ifelse(train$Open == 1, "Opened", "Closed"),
+      ifelse(train$Sales > 0, "Sales > 0", "Sales = 0"))
+
+
+zerosPerStore <- sort(tapply(train$Sales, list(train$Store), function(x) sum(x == 0)))
+
+subset(train[train$Open == 1 & train$DayOfWeek ==7])
+store$CompetitionOpenSince <- as.yearmon(paste(store$CompetitionOpenSinceYear, 
+                                               store$CompetitionOpenSinceMonth, sep = "-"))
+
+sort(tapply(sundaySales$Sales, list(sundaySales$Store), function(x) sum(x == 0)))
+
+train[Sales != 0 & DayOfWeek==7]

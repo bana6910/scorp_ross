@@ -219,32 +219,12 @@ ggplot(train_store[Sales != 0],
   ggtitle("Any competition?")
 
 
-# Sales before and after competition opens
-train_store$DateYearmon <- as.yearmon(train_store$Date)
-train_store <- train_store[order(Date)]
-timespan <- 300 # Days to collect before and after Opening of competition
-beforeAndAfterComp <- function(s) {
-  x <- train_store[Store == s]
-  daysWithComp <- x$CompetitionOpenSince >= x$DateYearmon
-  if (any(!daysWithComp)) {
-    compOpening <- head(which(!daysWithComp), 1) - 1
-    if (compOpening > timespan & compOpening < (nrow(x) - timespan)) {
-      x <- x[(compOpening - timespan):(compOpening + timespan), ] 
-      x$Day <- 1:nrow(x)
-      return(x)
-    }
-  }
-}
-temp <- lapply(unique(train_store[!is.na(CompetitionOpenSince)]$Store), beforeAndAfterComp)
-temp <- do.call(rbind, temp)
-# 130 stores first had no competition but at least 100 days before the end
-# of the data set
-length(unique(temp$Store))
-
-
-ggplot(temp[Sales != 0], aes(x = Day, y = Sales)) + 
-  geom_smooth() + 
-  ggtitle(paste("Competition opening around day", timespan))
+# sales vs Promo2
+ggplot(train_store,
+       aes(x = factor(Promo), y = Sales)) +
+  geom_jitter(alpha = 0.1) +
+  geom_boxplot(color = "blue", outlier.colour = NA, fill = NA) +
+  ggtitle("sales vs Promo")
 
 
 temp <- train
@@ -372,13 +352,26 @@ nrow(openstores_on_stateHolidays)
 
 unique(openstores_on_stateHolidays$Store)
 
+# Exceptinal store if open on stateholiday
+f_train_store$OpenonStateHoliday[f_train_store$StateHoliday != 0 & f_train_store$Open ==1 ] = 1
+f_train_store$OpenonStateHoliday[is.na(f_train_store$OpenonStateHoliday)] = 0
 
+# 861 cases stores open on state holiday
+nrow(f_train_store[OpenonStateHoliday ==1])
+
+# sales vs openonstateholiday
+ggplot(f_train_store, aes(x=factor(OpenonStateHoliday), y=Sales)) + 
+  stat_summary(fun.y="mean", geom="bar")
+                                 
 # For 166,190 cases the store is not continuing with promo2 eventhough they ran promo1
 f_train_store[Promo == 1 & Promo2==0]
 
+# sales vs openonstateholiday
+ggplot(f_train_store, aes(x=factor(Promo==1,Promo2==1), y=Sales)) + 
+  stat_summary(fun.y="mean", geom="bar")
+
 
 #Added How Many days since promo started column: promo2Days
-
 #convert promo2Since to date format
 f_train_store$Promo2Since = as.Date(f_train_store$Promo2Since)
 
@@ -413,11 +406,17 @@ abc$Promo2SinceWeek =  format(abc$Promo2Since, "%W")
 ## as given all schools are closed on public holidays and weekends (weekends == Sundays)
 ## trying to identify cases where schools are off and has no effect on sales
 # Adding column if schoolOff 1 means off and 0 means running (no off)
-f_train_store$schoolOff[f_train_store$schoolOff] = 0
+f_train_store$schoolOff = 0
 f_train_store$schoolOff[f_train_store$StateHoliday == "a" | f_train_store$DayOfWeek == 7 | f_train_store$SchoolHoliday == 1] = 1
 
 #Found 1,34,583 cases where store sales not affected even though schools are off (121350 (weekends off) + 13505(public holiday off) - 272 (both))
 nrow(f_train_store[SchoolHoliday == 0 & schoolOff==1])
+
+
+# sales vs schooloff
+ggplot(f_train_store, aes(x=factor(schoolOff), y=Sales)) + 
+  stat_summary(fun.y="mean", geom="bar")
+
 
 f_train_store[f_train_store$SchoolHoliday == 1]
 #150963
@@ -441,3 +440,5 @@ any(is.na(train_store$schoolOff))
 
 train_store[, lapply(.SD, function(x) length(unique(x)))]
 head(train_store)
+
+
