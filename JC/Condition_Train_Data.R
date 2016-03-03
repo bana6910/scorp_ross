@@ -1,20 +1,23 @@
-#Script to read, clean, merge, the training and store data sets for model training purposes
+#Script to read, clean, merge, and the train.csv and test.csv with store.csv data sets for model training and prediction purposes
 
 #Set Working Directory, Read and Check data sets
   setwd("C:/Users/jcotrell/Documents/Project 1/scorp_ross/input data")
   
   train<- read.csv("train.csv")
   stores<- read.csv("stores.csv")
+  test<- test.csv("test.csv")
   
   head(train); tail(train);summary(train); str(train)
   head(stores); tail(stores);summary(stores); str(stores)
 
-#Merge and check training and store data sets
+#Merge and check train.csv and test.csv with store.csv data 
   train.merged <- merge(train, stores, by.x="Store", by.y="Store")
+  test.merged <- merge(test, stores, by.x="Store", by.y="Store")
   head(train.merged); tail(train.merged); str(train.merged)#NA's exist and some variable needs conversion
+  head(test.merged); tail(test.merged); str(test.merged)#NA's exist and some variable needs conversion
+  
 
-
-#Convert variables to proper variable types
+#Convert variables in train.merged to proper variable types; #these changes should be identicle to those immediately below
   train.merged$Store = as.factor(train.merged$Store)
   train.merged$Date = as.Date(train.merged$Date,"%m/%d/%Y")
   train.merged$Open = as.factor(train.merged$Open)
@@ -30,7 +33,25 @@
   
   head(train.merged); tail(train.merged);summary(train.merged); str(train.merged)
 
+#Convert variables in test.merged to proper variable types; #these changes should be identicle to those above
+  
+  test.merged$Store = as.factor(test.merged$Store)
+  test.merged$Date = as.Date(test.merged$Date,"%m/%d/%Y")
+  test.merged$Open = as.factor(test.merged$Open)
+  test.merged$Promo = as.factor(test.merged$Promo)
+  test.merged$StateHoliday = as.factor(test.merged$StateHoliday)
+  test.merged$SchoolHoliday = as.factor(test.merged$SchoolHoliday)
+  test.merged$StoreType = as.factor(test.merged$StoreType)
+  test.merged$Assortment = as.factor(test.merged$Assortment)
+  test.merged$CompetitionOpenSinceYear = as.factor(test.merged$CompetitionOpenSinceYear)
+  test.merged$Promo2 = as.factor(test.merged$Promo2)
+  test.merged$Promo2SinceYear = as.factor(test.merged$Promo2SinceYear)
+  test.merged$Sales = as.numeric(test.merged$Sales) #necessary for functions like sum()
+  
+  head(test.merged); tail(test.merged);summary(test.merged); str(test.merged)
+  
   #Break training data in 1/2 for training models and testing models 
+    set.seed(123) #set a seed to provide some repeatability when sampling
     train_ind = sample(nrow(train.merged), nrow(train.merged)/2) #creates a training index vector of size nrow/2.
     train_d = train.merged[train_ind,]#create the training and test data sets by pulling all indexed rows from d 
     test_d = train.merged[-train_ind,]
@@ -40,3 +61,4 @@
     #Repeat for training data for convenience later
       train_d.n0 = train_d[train_d$Sales != 0,]
       summary(train_d.n0)
+
