@@ -8,6 +8,7 @@
     library(survival)
     library(splines)
     library(parallel)
+    #library(tree)
     library(randomForest)
     library(gbm)
     library(bst)
@@ -26,79 +27,68 @@
   #Predictions
   
     #Compute mean of sales as a baseline prediction with zeros removed**************************
-      mean.pred <- mean(train_d.n0$Sales); mean.pred #7070
-      RMSPE.mean =  sqrt( (sum( (test_d.n0$Sales - mean.pred)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.mean # Compute Root Mean Square Percentage Error (RMSPE)
+      mean.model <- mean(train_d.n0$Sales); mean.model #7070
+      RMSPE.mean =  sqrt( (sum( (test_d.n0$Sales - mean.model)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.mean # Compute Root Mean Square Percentage Error (RMSPE)
     
-    #Fitting a linear model*********************************************
-    #lm.model = train(power.mean ~ ., 
-     #                data = data.train, 
-    #                 method = "lm", 
-   #                  trControl=fitControl)
-   # print(lm.model)
+   #Fitting a linear model*********************************************
+     
+     lm1.model = lm(Sales ~ DayOfWeek + StateHoliday + Assortment + Customers + StoreType, data = train_d.n0)
+       #Notes 
+          #I had an error when trying to use "Open" so I removed it
+          #CompetitionDistance has NA values so I removedDayOfWeek 
+          #Removed school holiday due to high P value
+     
+      summary(lm1.model) #State holiday b and C aren't significant, but leave them for now as removing doesn't help Adj R square .7954
+     
+       #Check quality of prediction (RMSPE) on test_d.n0$Sales
+         lm1.pred <- predict(lm1.model, newdata = test_d.n0)
+         head(lm1.pred); str(lm1.pred)
+         qplot(lm1.pred)
+         RMSPE.lm1 =  sqrt( (sum( (test_d.n0$Sales - lm1.pred)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.lm1 #26.98 
+     
+ #Fitting a regression tree********************************* 
+
+        #Fit the tree to the training data
+        #tree.model=tree(train_d.n0 ~ DayOfWeek + StateHoliday + Assortment + Customers + StoreType, train_d.n0)
+        #summary(tree.model)
     
-    # lm.model.pred <- predict(lm.model, newdata = data.test)
-    # mean((lm.model.pred-data.test$power.mean)^2) #42759.209
-    # sqrt(mean((lm.model.pred-data.test$power.mean)^2)) #206.783
-    # 
-    # ggplot(data.test, aes(x=ws.HH)) + 
-    #   geom_point(aes(y=power.mean, color="actual power")) + 
-    #   geom_point(aes(y=lm.model.pred, color="predictions")) +
-    #   ggtitle("Linear Predictions") +
-    #   theme(legend.title=element_blank())
+        #Plot the tree
+        #plot(tree.model)
+        #text(tree.model,pretty=0)
     
-#     #Fitting a regression tree********************************* 
-#     library(ggplot2)
-#     library(tree)
-#     
-#     #Create train/test set using Andy's method 
-#     set.seed(123)
-#     ntrain = floor(nrow(data.in)/2) 
-#     train = rep(FALSE,nrow(data.in))
-#     train[sample(nrow(data.in), ntrain)] = TRUE
-#     data.train = data.in[train == TRUE,]
-#     data.test = data.in[train == FALSE,]
-#     
-#     #Fit the tree to the training data
-#     tree.model=tree(power.mean~., data.train)
-#     summary(tree.model)
-#     
-#     #Plot the tree
-#     plot(tree.model)
-#     text(tree.model,pretty=0)
-#     
-#     #Use tree to make predictions to the train set
-#     tree.model.trn.predictions=predict(tree.model,newdata=data.train)
-#     plot(tree.model.trn.predictions,data.train$power.mean)
-#     abline(0,1)
-#     mean((tree.model.trn.predictions-data.train$power.mean)^2) #MSE=9368.11
-#     sqrt(mean((tree.model.trn.predictions-data.train$power.mean)^2)) #RMSE=96.79
-#     
-#     #Use tree to make predictions to the test set
-#     tree.model.tst.predictions=predict(tree.model,newdata=data.test)
-#     plot(tree.model.tst.predictions,data.test$power.mean)
-#     abline(0,1)
-#     mean((tree.model.tst.predictions-data.test$power.mean)^2) #MSE=9775.94
-#     sqrt(mean((tree.model.tst.predictions-data.test$power.mean)^2)) #RMSE=98.87
+        #Use tree to make predictions to the train set
+        #tree.model.trn.predictions=predict(tree.model,newdata=data.train)
+        #plot(tree.model.trn.predictions,data.train$power.mean)
+        #abline(0,1)
+        #mean((tree.model.trn.predictions-data.train$power.mean)^2) #MSE=9368.11
+        #sqrt(mean((tree.model.trn.predictions-data.train$power.mean)^2)) #RMSE=96.79
+    
+        #Use tree to make predictions to the test set
+        #tree.model.tst.predictions=predict(tree.model,newdata=data.test)
+        #plot(tree.model.tst.predictions,data.test$power.mean)
+        #abline(0,1)
+        #mean((tree.model.tst.predictions-data.test$power.mean)^2) #MSE=9775.94
+        #sqrt(mean((tree.model.tst.predictions-data.test$power.mean)^2)) #RMSE=98.87
     
     
-#     #Create random forest model*******************************************************
-#     rf.model = train(power.mean ~ ., 
-#                      method = "rf",
-#                      data = data.train, 
-#                      trControl=fitControl)
-#     print(rf.model)
-#     #The final value used for the model was mtry = 3. 
-#     plot(rf.model)
-#     
-#     rf.model.pred <- predict(rf.model, newdata = data.test)
-#     mean((rf.model.pred-data.test$power.mean)^2) #256.756
-#     sqrt(mean((rf.model.pred-data.test$power.mean)^2)) #16.024
-#     
-#     ggplot(data.test, aes(x=ws.HH)) + 
-#       geom_point(aes(y=power.mean, color="actual power")) + 
-#       geom_point(aes(y=rf.model.pred, color="predictions")) +
-#       ggtitle("Random Forest Predictions") +
-#       theme(legend.title=element_blank())
+    #Create random forest model*******************************************************
+    rf.model = train(Sales ~ .,
+                     method = "rf",
+                     data = train_d.n0,
+                     trControl=fitControl)
+    print(rf.model)
+    #The final value used for the model was mtry = 3.
+    plot(rf.model)
+
+    rf.model.pred <- predict(rf.model, newdata = data.test)
+    mean((rf.model.pred-data.test$power.mean)^2) #256.756
+    sqrt(mean((rf.model.pred-data.test$power.mean)^2)) #16.024
+
+    ggplot(data.test, aes(x=ws.HH)) +
+      geom_point(aes(y=power.mean, color="actual power")) +
+      geom_point(aes(y=rf.model.pred, color="predictions")) +
+      ggtitle("Random Forest Predictions") +
+      theme(legend.title=element_blank())
 #     
 #     #Created new stochastic gradient boosting model
 #     gbm.model = train(power.mean ~ ., 
