@@ -60,4 +60,7 @@
     #Repeat for training data for convenience later
       train_d.n0 = train_d[train_d$Sales != 0,]
       summary(train_d.n0)
+    #Repeat for all training data for convenience later
+      train.merged.n0 = train.merged[train.merged$Sales != 0,]
+      summary(train_d.n0)
 
