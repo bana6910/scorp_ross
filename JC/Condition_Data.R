@@ -5,7 +5,7 @@
   
   train<- read.csv("train.csv")
   stores<- read.csv("stores.csv")
-  test<- test.csv("test.csv")
+  test<- read.csv("test.csv")
   
   head(train); tail(train);summary(train); str(train)
   head(stores); tail(stores);summary(stores); str(stores)
@@ -46,7 +46,6 @@
   test.merged$CompetitionOpenSinceYear = as.factor(test.merged$CompetitionOpenSinceYear)
   test.merged$Promo2 = as.factor(test.merged$Promo2)
   test.merged$Promo2SinceYear = as.factor(test.merged$Promo2SinceYear)
-  test.merged$Sales = as.numeric(test.merged$Sales) #necessary for functions like sum()
   
   head(test.merged); tail(test.merged);summary(test.merged); str(test.merged)
   
