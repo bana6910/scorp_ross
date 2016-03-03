@@ -67,4 +67,4 @@
          rf.pred2 = predict(rf.model2, newdata=test_d.n0)
          head(rf.pred2); str(rf.pred2)
          qplot(rf.pred2)
-         RMSPE.rf2 =  sqrt( (sum( (test_d.n0$Sales - rf.pred2)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.rf2 31%
+         RMSPE.rf2 =  sqrt( (sum( (test_d.n0$Sales - rf.pred2)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.rf2 #31%
