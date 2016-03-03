@@ -1,4 +1,4 @@
-#Script to read, merge, clean and write training and store data sets
+#Script to read, clean, merge, the training and store data sets for model training purposes
 
 #Set Working Directory, Read and Check data sets
   setwd("C:/Users/jcotrell/Documents/Project 1/scorp_ross/input data")
