@@ -20,5 +20,5 @@
   names(rf2.test.predictions)[9] <- "Sales"
   head( rf2.test.predictions); summary(rf2.test.predictions); str(rf2.test.predictions)
   qplot(rf2.test.predictions$Sales)
-  write.csv(rf2.test.predictions, file = "C:/Users/jcotrell/Documents/Project 1/scorp_ross/output/rf2.predictions")
+  write.csv(rf2.test.predictions, file = "C:/Users/jcotrell/Documents/Project 1/scorp_ross/output/rf2.predictions.csv")
   
