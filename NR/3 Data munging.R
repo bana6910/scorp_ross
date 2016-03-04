@@ -237,3 +237,37 @@ mdl1_gm_predictions$Sales[is.na(mdl1_predictions$Sales)]=0
 write.csv(mdl1_gm_predictions, "FEmdl1_predictions.csv",row.names=F)
 
 ####11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+
+
+## trying Random forest from Jamies work
+
+## Jamie's RF Stuff
+library(ElemStatLearn)
+library(MASS)
+library(randomForest)
+library(tree)
+?randomForest
+
+########### Feature Engineering #####################
+f_train_store$Sales = as.factor(f_train_store$Sales)
+levels(f_test_store$DayOfWeek) <- levels(f_train_store$DayOfWeek)
+levels(f_test_store$Open) <- levels(f_train_store$Open)
+levels(f_test_store$CompetitionDistance) <- levels(f_train_store$CompetitionDistance)
+levels(f_test_store$Promo2) <- levels(f_train_store$Promo2)
+
+rf_rossmann = randomForest(Sales ~ DayOfWeek + CompetitionDistance + Open ,
+                          data=f_train_store,ntree=25, mtry=2, na.action=na.omit, importance=TRUE, proximity=TRUE)
+
+
+rf_predict = predict(rf_rossmann, f_test_store, method ="class")
+
+varImpPlot(rf_rossmann)
+plot(rf_rossmann, log="y")
+rfsubmit <- data.frame(store = data$store, Sales = rf_predict)
+write.csv(rfsubmit, file = "rfsubmission.csv", row.names = FALSE)
+
+
+
+
+
+
