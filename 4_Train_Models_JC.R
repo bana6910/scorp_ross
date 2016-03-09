@@ -40,63 +40,88 @@
     summary(train_d.n0)
     
     
-  #Predictions
-  
-    #Compute mean of sales as a baseline prediction with zeros removed**************************
-      mean.model <- mean(train_d.n0$Sales); mean.model #7070
-      RMSPE.mean =  sqrt( (sum( (test_d.n0$Sales - mean.model)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.mean # Compute Root Mean Square Percentage Error (RMSPE) 121
-    
-   #Fitting a linear model*********************************************
-     
-     lm1.model = lm(Sales ~ DayOfWeek + StateHoliday + Assortment + StoreType + Promo + CompetitionDistance + CompetitionOpenSince + promo2Days, data = train_d.n0)
-       #Notes 
-          #I had an error when trying to use "Open" so I removed it
-          #Removed school holiday due to high P value
-          #Note Promo2Days is not valuable 
-          #CompetitionOPenSince is not valuable
-     
-      summary(lm1.model) #State holiday b and C aren't significant, but leave them for now as removing doesn't help Adj R square .7954
-     
-       #Check quality of prediction (RMSPE) on test_d.n0$Sales
-         lm1.pred <- predict(lm1.model, newdata = test_d.n0)
-         head(lm1.pred); str(lm1.pred)
-         qplot(lm1.pred)
-         RMSPE.lm1 =  sqrt( (sum( (test_d.n0$Sales - lm1.pred)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.lm1 #92% 
-     
- #Fitting a random forest tree********************************* 
-         library(randomForest)
+ #  #Predictions
+ #  
+ #    #Compute mean of sales as a baseline prediction with zeros removed**************************
+ #      mean.model <- mean(train_d.n0$Sales); mean.model #7070
+ #      RMSPE.mean =  sqrt( (sum( (test_d.n0$Sales - mean.model)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.mean # Compute Root Mean Square Percentage Error (RMSPE) 121
+ #    
+ #   #Fitting a linear model*********************************************
+ #     
+ #     lm1.model = lm(Sales ~ DayOfWeek + StateHoliday + Assortment + StoreType + Promo + CompetitionDistance + CompetitionOpenSince + promo2Days, data = train_d.n0)
+ #       #Notes 
+ #          #I had an error when trying to use "Open" so I removed it
+ #          #Removed school holiday due to high P value
+ #          #Note Promo2Days is not valuable 
+ #          #CompetitionOPenSince is not valuable
+ #     
+ #      summary(lm1.model) #State holiday b and C aren't significant, but leave them for now as removing doesn't help Adj R square .7954
+ #     
+ #       #Check quality of prediction (RMSPE) on test_d.n0$Sales
+ #         lm1.pred <- predict(lm1.model, newdata = test_d.n0)
+ #         head(lm1.pred); str(lm1.pred)
+ #         qplot(lm1.pred)
+ #         RMSPE.lm1 =  sqrt( (sum( (test_d.n0$Sales - lm1.pred)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.lm1 #92% 
+ #     
+ # #Fitting a random forest tree********************************* 
+ #         library(randomForest)
+ #         
+ #        
+ #         #mtry=2 (Bagging)
+ #         rf.model2 = randomForest(Sales ~ DayOfWeek + Assortment + StoreType + Promo + promo2Days, data = train_d.n0, mtry=2, ntree=5)
+ #         #removed state holiday due to factors of different levels in test.merged.
+ #         print(rf.model2)
+ #         importance(rf.model2)
+ #         
+ #         
+ #         rf.pred2 = predict(rf.model2, newdata=test_d.n0)
+ #         head(rf.pred2); str(rf.pred2)
+ #         qplot(rf.pred2)
+ #         RMSPE.rf2 =  sqrt( (sum( (test_d.n0$Sales - rf.pred2)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.rf2 #88%
+ #         
+ #         #mtry=2 (Bagging with all variables)
+ #         rf.model3 = randomForest(Sales ~ DayOfWeek + StateHoliday + Promo + Assortment  + StoreType + SchoolHoliday + promo2Days + CompetitionDistance, data = train_d.n0, mtry=2, ntree=5)
+ #         print(rf.model3)
+ #         importance(rf.model3)
+ #         
+ #         rf.pred3 = predict(rf.model3, newdata=test_d.n0)
+ #         head(rf.pred3); str(rf.pred3)
+ #         qplot(rf.pred3)
+ #         RMSPE.rf3 =  sqrt( (sum( (test_d.n0$Sales - rf.pred3)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.rf3 #81%
+ #         
+ #         #Remove SchoolHoliday & StateHoliday
+ #         rf.model3 = randomForest(Sales ~ DayOfWeek +  Promo + Assortment  + StoreType +  CompetitionDistance, data = train_d.n0, mtry=2, ntree=25)
+ #         #note promo2Days was making this run slow "30 min", but improve the prediction by roughly 10%
+ #         print(rf.model3)
+ #         importance(rf.model3)
+ #         
+ #         rf.pred3 = predict(rf.model3, newdata=test_d.n0)
+ #         head(rf.pred3); str(rf.pred3)
+ #         qplot(rf.pred3)
+ #         RMSPE.rf3 =  sqrt( (sum( (test_d.n0$Sales - rf.pred3)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.rf3 #83%
+ #         
+ #         #Change variable type of promo2Days and add back to model
+ #         train_d.n0$promo2Days = as.numeric(train_d.n0$promo2Days)
+ #         test_d.n0$promo2Days = as.numeric(test_d.n0$promo2Days)
+ #         
+ #         rf.model4 = randomForest(Sales ~ DayOfWeek +  Promo + promo2Days + Assortment  + StoreType +  CompetitionDistance, data = train_d.n0, mtry=2, ntree=25)
+ #         print(rf.model4)
+ #         importance(rf.model4)
+ #         
+ #         rf.pred4 = predict(rf.model4, newdata=test_d.n0)
+ #         head(rf.pred4); str(rf.pred4)
+ #         qplot(rf.pred4)
+ #         RMSPE.rf4 =  sqrt( (sum( (test_d.n0$Sales - rf.pred4)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.rf4 #75%
+ #         #Note 25 trees appears to be too many; 5 trees reduced the error by 5%
          
+         #Remove assortment and reduce number of trees to 5
+         rf.model5 = randomForest(Sales ~ DayOfWeek +  Promo + promo2Days + StoreType +  CompetitionDistance, data = train_d.n0, mtry=2, ntree=5)
+         print(rf.model5)
+         importance(rf.model5)
+         
+         rf.pred5 = predict(rf.model5, newdata=test_d.n0)
+         head(rf.pred5); str(rf.pred5)
+         qplot(rf.pred5)
+         RMSPE.rf5 =  sqrt( (sum( (test_d.n0$Sales - rf.pred5)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.rf5 #74%
         
-         #mtry=2 (Bagging)
-         rf.model2 = randomForest(Sales ~ DayOfWeek + Assortment + StoreType + Promo + promo2Days, data = train_d.n0, mtry=2, ntree=5)
-         #removed state holiday due to factors of different levels in test.merged.
-         print(rf.model2)
-         importance(rf.model2)
-         
-         
-         rf.pred2 = predict(rf.model2, newdata=test_d.n0)
-         head(rf.pred2); str(rf.pred2)
-         qplot(rf.pred2)
-         RMSPE.rf2 =  sqrt( (sum( (test_d.n0$Sales - rf.pred2)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.rf2 #88%
-         
-         #mtry=2 (Bagging with all variables)
-         rf.model3 = randomForest(Sales ~ DayOfWeek + StateHoliday + Promo + Assortment  + StoreType + SchoolHoliday + promo2Days + CompetitionDistance, data = train_d.n0, mtry=2, ntree=5)
-         print(rf.model3)
-         importance(rf.model3)
-         
-         rf.pred3 = predict(rf.model3, newdata=test_d.n0)
-         head(rf.pred3); str(rf.pred3)
-         qplot(rf.pred3)
-         RMSPE.rf3 =  sqrt( (sum( (test_d.n0$Sales - rf.pred3)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.rf3 #81%
-         
-         #Remove SchoolHoliday & StateHoliday
-         rf.model3 = randomForest(Sales ~ DayOfWeek +  Promo + Assortment  + StoreType +  promo2Days + CompetitionDistance, data = train_d.n0, mtry=2, ntree=5)
-         #note promo2Days is making this run slow
-         print(rf.model3)
-         importance(rf.model3)
-         
-         rf.pred3 = predict(rf.model3, newdata=test_d.n0)
-         head(rf.pred3); str(rf.pred3)
-         qplot(rf.pred3)
-         RMSPE.rf3 =  sqrt( (sum( (test_d.n0$Sales - rf.pred3)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.rf3 #74%
          
