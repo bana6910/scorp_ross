@@ -5,7 +5,7 @@ library(data.table)
 library(zoo)
 
 library(forecast)
-#library(ggplot2)
+library(ggplot2)
 
 test <- fread("C:/Users/jcotrell/Documents/Project 1/scorp_ross/input_data/test.csv")
 train <- fread("C:/Users/jcotrell/Documents/Project 1/scorp_ross/input_data/train.csv") #Note error is due to StateHoliday containing 'a' values
