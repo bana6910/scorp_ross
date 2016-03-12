@@ -1,7 +1,7 @@
 #Script to read, clean, merge, and the train.csv and test.csv with store.csv data sets for model training and prediction purposes
 
 #Set Working Directory, Read and Check data sets
-  setwd("C:/Users/jcotrell/Documents/Project 1/scorp_ross/input data")
+  setwd("C:/Users/jcotrell/Documents/Project 1/scorp_ross/input_data")
   
   train<- read.csv("train.csv")
   stores<- read.csv("stores.csv")
