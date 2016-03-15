@@ -4,7 +4,7 @@
   #Prediction Libraries
     library(lattice)
     library(ggplot2)
-    #library(caret)
+    library(caret)
     library(survival)
     library(splines)
     library(parallel)
@@ -100,28 +100,75 @@
  #         qplot(rf.pred3)
  #         RMSPE.rf3 =  sqrt( (sum( (test_d.n0$Sales - rf.pred3)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.rf3 #83%
  #         
- #         #Change variable type of promo2Days and add back to model
- #         train_d.n0$promo2Days = as.numeric(train_d.n0$promo2Days)
- #         test_d.n0$promo2Days = as.numeric(test_d.n0$promo2Days)
- #         
- #         rf.model4 = randomForest(Sales ~ DayOfWeek +  Promo + promo2Days + Assortment  + StoreType +  CompetitionDistance, data = train_d.n0, mtry=2, ntree=25)
- #         print(rf.model4)
- #         importance(rf.model4)
- #         
- #         rf.pred4 = predict(rf.model4, newdata=test_d.n0)
- #         head(rf.pred4); str(rf.pred4)
- #         qplot(rf.pred4)
- #         RMSPE.rf4 =  sqrt( (sum( (test_d.n0$Sales - rf.pred4)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.rf4 #75%
- #         #Note 25 trees appears to be too many; 5 trees reduced the error by 5%
-         
-         #Remove assortment and reduce number of trees to 5
-         rf.model5 = randomForest(Sales ~ DayOfWeek +  Promo + promo2Days + StoreType +  CompetitionDistance, data = train_d.n0, mtry=2, ntree=5)
-         print(rf.model5)
-         importance(rf.model5)
-         
-         rf.pred5 = predict(rf.model5, newdata=test_d.n0)
-         head(rf.pred5); str(rf.pred5)
-         qplot(rf.pred5)
-         RMSPE.rf5 =  sqrt( (sum( (test_d.n0$Sales - rf.pred5)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.rf5 #74%
-        
-         
+    #Change variable type of promo2Days and add back to model
+    train_d.n0$promo2Days = as.numeric(train_d.n0$promo2Days)
+    test_d.n0$promo2Days = as.numeric(test_d.n0$promo2Days)
+    #         
+    #         rf.model4 = randomForest(Sales ~ DayOfWeek +  Promo + promo2Days + Assortment  + StoreType +  CompetitionDistance, data = train_d.n0, mtry=2, ntree=25)
+    #         print(rf.model4)
+    #         importance(rf.model4)
+    #         
+    #         rf.pred4 = predict(rf.model4, newdata=test_d.n0)
+    #         head(rf.pred4); str(rf.pred4)
+    #         qplot(rf.pred4)
+    #         RMSPE.rf4 =  sqrt( (sum( (test_d.n0$Sales - rf.pred4)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.rf4 #75%
+    #         #Note 25 trees appears to be too many; 5 trees reduced the error by 5%
+    
+    # #Remove assortment and reduce number of trees to 5
+    # rf.model5 = randomForest(Sales ~   Promo + promo2Days+CompetitionDistance, data = train_d.n0, mtry=2, ntree=5)
+    # print(rf.model5)
+    # importance(rf.model5)
+    # 
+    # rf.pred5 = predict(rf.model5, newdata=test_d.n0)
+    # head(rf.pred5); str(rf.pred5)
+    # qplot(rf.pred5)
+    # RMSPE.rf5 =  sqrt( (sum( (test_d.n0$Sales - rf.pred5)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.rf5 #74%
+    
+    #Try the caret package
+
+    fitControl = trainControl(method='CV', #use cross validation
+                              number=5, #set the number of folds
+                              summaryFunction = defaultSummary, 
+                              classProbs = FALSE)
+    
+    rf.model6 = train(Sales ~  CompetitionDistance, 
+                      method = "rf",
+                      data = train_d.n0, 
+                      trControl=fitControl)
+    print(rf.model6)
+    
+    
+    # #Created new stochastic gradient boosting model
+    #   gbm.model = train(test_d.n0$Sales ~  Promo + promo2Days + CompetitionDistance, 
+    #                     data = train_d.n0, 
+    #                     method = "gbm",
+    #                     trControl=fitControl,
+    #                     verbose = TRUE)
+    #   print(gbm.model)
+    #   #The final values used for the model were n.trees = 150, interaction.depth = 3, shrinkage = 0.1
+    #   #and n.minobsinnode = 10. 
+    #   plot(gbm.model)
+    #   
+    #   #Created new boosted tree model
+    #   bt.model <- train(test_d.n0$Sales ~  Promo + promo2Days + CompetitionDistance, 
+    #                     data = train_d.n0,
+    #                     method='bstTree',
+    #                     trControl=fitControl)
+    #   print(bt.model)
+    #   #The final values used for the model were mstop = 150, maxdepth = 3 and nu = 0.1.
+    #   plot(bt.model)
+    
+    #Cubist Model
+    cb.model <- train(Sales ~  DayOfWeek +  Promo + promo2Days + Assortment  + StoreType +  CompetitionDistance, 
+                      data = train_d.n0,
+                      method='cubist', 
+                      trControl=fitControl)
+    print(cb.model)
+    #The final values used for the model were committees = 20 and neighbors = 5. 
+    plot(cb.model)
+    
+    cb.pred6 = predict(cb.model, newdata=test_d.n0)
+    RMSPE.cb6 =  sqrt( (sum( (test_d.n0$Sales - cb.pred6)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.cb6 #56%
+    
+    save(cb.model, file = "model_cb6.RData")
+    
