@@ -2,18 +2,31 @@
 #scripts to condition (merge and clean) both the training data and test data should have been run previously
  
   #Prediction Libraries
-    library(lattice)
+    #library(lattice)
     library(ggplot2)
     library(caret)
-    library(survival)
-    library(splines)
-    library(parallel)
+    #library(survival)
+    #library(splines)
+    #library(parallel)
     #library(tree)
-    library(randomForest)
-    library(gbm)
-    library(bst)
-    library(plyr)
+    #library(randomForest)
+    #library(gbm)
+    #library(bst)
+    #library(plyr)
     library(Cubist)
+    
+    library(Metrics)# for RSME
+    
+    #function for rmspe
+    rmspe <- function(truth_y, pred_y) {
+      nonzero <- truth_y > 0
+      n <- sum(nonzero)
+      diff <- (truth_y[nonzero] - pred_y[nonzero]) / truth_y[nonzero]
+      diff <- diff**2
+      diff <- sqrt(sum(diff)/n)
+      return(diff)
+    }    
+    
 
   #Check Training Data
     # head(train.merged)
@@ -23,21 +36,39 @@
     # summary(train.merged)
     # colSums(is.na(train.merged))  #Check for NA (misssumming) value
 
+    
+#Read data from 3_Data_Munging.R
+    load("f_train_store.RData", verbose = FALSE)
+    load("f_test_store.RData", verbose = FALSE)  
+    
+    
+    
 
- #Break training data in 1/2 for training models and testing models (this should be changed to 75%/25%) 
+ #Break training data in 1/2 for training models and testing models
     set.seed(123) #set a seed to provide some repeatability when sampling
-    train_ind = sample(nrow(f_train_store), nrow(f_train_store)/2) #creates a training index vector of size nrow/2.
+    
+    fraction = .1
+    train_ind = sample(nrow(f_train_store), nrow(f_train_store)*fraction) #creates a training index vector of size nrow*fraction.
     train_d = f_train_store[train_ind,]#create the training and test data sets by pulling all indexed rows from d 
     test_d = f_train_store[-train_ind,]
+    
     #Remove zeros from test_d consistent with test data provided by Daria
     test_d.n0 = test_d[test_d$Sales != 0,]
     summary(test_d.n0)
+    
     #Repeat for training data for convenience later
     train_d.n0 = train_d[train_d$Sales != 0,]
     summary(train_d.n0)
+    
     #Repeat for all training data for convenience later
-    f_train_store.n0 = f_train_store[f_train_store$Sales != 0,]
-    summary(train_d.n0)
+    #f_train_store.n0 = f_train_store[f_train_store$Sales != 0,]
+    #summary(train_d.n0)
+    
+    #Replace sales in datasets with log(sales) to estimate RMSPE for the optimization
+    test_d.n0$Sales = log(test_d.n0$Sales) 
+    train_d.n0$Sales = log(train_d.n0$Sales) 
+    #f_train_store.n0$Sales = log(train_d.n0$Sales)
+    
     
     
  #  #Predictions
@@ -101,8 +132,8 @@
  #         RMSPE.rf3 =  sqrt( (sum( (test_d.n0$Sales - rf.pred3)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.rf3 #83%
  #         
     #Change variable type of promo2Days and add back to model
-    train_d.n0$promo2Days = as.numeric(train_d.n0$promo2Days)
-    test_d.n0$promo2Days = as.numeric(test_d.n0$promo2Days)
+    #train_d.n0$promo2Days = as.numeric(train_d.n0$promo2Days)
+    #test_d.n0$promo2Days = as.numeric(test_d.n0$promo2Days)
     #         
     #         rf.model4 = randomForest(Sales ~ DayOfWeek +  Promo + promo2Days + Assortment  + StoreType +  CompetitionDistance, data = train_d.n0, mtry=2, ntree=25)
     #         print(rf.model4)
@@ -126,16 +157,13 @@
     
     #Try the caret package
 
-    fitControl = trainControl(method='CV', #use cross validation
-                              number=5, #set the number of folds
-                              summaryFunction = defaultSummary, 
-                              classProbs = FALSE)
+  
     
-    rf.model6 = train(Sales ~  CompetitionDistance, 
-                      method = "rf",
-                      data = train_d.n0, 
-                      trControl=fitControl)
-    print(rf.model6)
+    # rf.model6 = train(Sales ~  CompetitionDistance, 
+    #                   method = "rf",
+    #                   data = train_d.n0, 
+    #                   trControl=fitControl)
+    # print(rf.model6)
     
     
     # #Created new stochastic gradient boosting model
@@ -159,16 +187,30 @@
     #   plot(bt.model)
     
     #Cubist Model
-    cb.model <- train(Sales ~  DayOfWeek +  Promo + promo2Days + Assortment  + StoreType +  CompetitionDistance, 
-                      data = train_d.n0,
-                      method='cubist', 
-                      trControl=fitControl)
-    print(cb.model)
-    #The final values used for the model were committees = 20 and neighbors = 5. 
-    plot(cb.model)
+  
+        fitControl = trainControl(method='CV', #use cross validation
+                              number=5, #set the number of folds
+                              summaryFunction = defaultSummary, 
+                              classProbs = FALSE)
     
-    cb.pred6 = predict(cb.model, newdata=test_d.n0)
-    RMSPE.cb6 =  sqrt( (sum( (test_d.n0$Sales - cb.pred6)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.cb6 #56%
     
-    save(cb.model, file = "model_cb6.RData")
     
+       cb.model <- train(Sales ~  DayOfWeek +  Promo + promo2Days + Assortment  + StoreType +  CompetitionDistance, 
+                          data = train_d.n0,
+                          method='cubist', 
+                          trControl=fitControl)
+       
+        save(cb.model, file = "model_cb7.RData")
+        print(cb.model) 
+        plot(cb.model) #The final values used for the model were committees = 20 and neighbors = 5. 
+        
+        #Comput RSME for log of sales value (the estimate for RMSPE)
+        cb.pred6 = predict(cb.model, newdata=test_d.n0)
+        rmse.cb.pred6 = rmse(test_d.n0$Sales, cb.pred6);rmse.cb.pred6 #29%
+        
+        #Check that RMSPE is being computed correctly
+       # RMSPE.cb6 =  sqrt( (sum( (test_d.n0$Sales - cb.pred6)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.cb6 #56%
+        actual = exp(test_d.n0$Sales)
+        predicted =exp(cb.pred6)
+        RMSPE.cb6 = rmspe(actual,predicted); RMSPE.cb6 #36%
+        
