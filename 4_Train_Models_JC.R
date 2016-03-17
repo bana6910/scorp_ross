@@ -10,10 +10,10 @@
     #library(parallel)
     #library(tree)
     #library(randomForest)
-    #library(gbm)
+    library(gbm)
     #library(bst)
     #library(plyr)
-    library(Cubist)
+    #library(Cubist)
     
     library(Metrics)# for RSME
     
@@ -188,29 +188,111 @@
     
     #Cubist Model
   
-        fitControl = trainControl(method='CV', #use cross validation
-                              number=5, #set the number of folds
-                              summaryFunction = defaultSummary, 
-                              classProbs = FALSE)
+       #  fitControl = trainControl(method='CV', #use cross validation
+       #                        number=2, #set the number of folds
+       #                        summaryFunction = defaultSummary, 
+       #                        repeats = 1,
+       #                        verboseIter = TRUE,
+       #                        classProbs = FALSE)
+       # 
+       # 
+       # 
+       # cb.model <- train(Sales ~  DayOfWeek +  Promo + promo2Days + Assortment  + StoreType +  CompetitionDistance, 
+       #                    data = train_d.n0,
+       #                    method='cubist', 
+       #                    trControl=fitControl)
+       # 
+       #  save(cb.model, file = "model_cb7.RData")
+       #  print(cb.model) 
+       #  plot(cb.model) #The final values used for the model were committees = 20 and neighbors = 5. 
+       #  
+       #  #Comput RSME for log of sales value (the estimate for RMSPE)
+       #  cb.pred6 = predict(cb.model, newdata=test_d.n0)
+       #  rmse.cb.pred6 = rmse(test_d.n0$Sales, cb.pred6);rmse.cb.pred6 #29.41%
+       #  
+       #  #Check that RMSPE is being computed correctly
+       # # RMSPE.cb6 =  sqrt( (sum( (test_d.n0$Sales - cb.pred6)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.cb6 #56%
+       #  actual = exp(test_d.n0$Sales)
+       #  predicted =exp(cb.pred6)
+       #  RMSPE.cb6 = rmspe(actual,predicted); RMSPE.cb6 #36.86%
+       #  
+       #  Sys.time()
+       #  
+    # #GBM Model
+    # 
+    # 
+    #   
+    # 
+    #   fitControl <- trainControl(method = "CV",
+    #       repeats = 1,
+    #       number = 2,
+    #       verboseIter = TRUE
+    #     )
+    #     
+    #     gbmGrid <-  expand.grid(interaction.depth = c(11,15,20),
+    #                             n.trees = c(400,800),
+    #                             shrinkage = c(0.1,.01),
+    #                             n.minobsinnode = 30
+    #     )
+    #     
+    #     gbm.model<- train(Sales ~  DayOfWeek +  Promo + promo2Days + Assortment  + StoreType +  CompetitionDistance, 
+    #                      data = train_d.n0,
+    #                      method = "gbm",
+    #                      metric = "RMSE",
+    #                      trControl = fitControl,
+    #                      tuneGrid = gbmGrid
+    #     )
+    #     
+    #     save(gbm.model, file = "model_gbm.RData")
+    #     print(gbm.model) 
+    #     plot(gbm.model) 
+    #     
+    #     #Comput RSME for log of sales value (the estimate for RMSPE)
+    #     gbm.pred = predict(gbm.model, newdata=test_d.n0)
+    #     rmse.gbm.pred = rmse(test_d.n0$Sales, gbm.pred);rmse.gbm.pred #21%
+    #     
+    #     #Check that RMSPE is being computed correctly
+    #     # RMSPE.cb6 =  sqrt( (sum( (test_d.n0$Sales - cb.pred6)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.cb6 #56%
+    #     actual = exp(test_d.n0$Sales)
+    #     predicted =exp(gbm.pred)
+    #     RMSPE.gbm = rmspe(actual,predicted); RMSPE.gbm #28%
+    #     
+    #     Sys.time()
     
+    #GBM Model 3
     
+    fitControl <- trainControl(method = "CV",
+                               repeats = 1,
+                               number = 2,
+                               verboseIter = TRUE
+    )
     
-       cb.model <- train(Sales ~  DayOfWeek +  Promo + promo2Days + Assortment  + StoreType +  CompetitionDistance, 
-                          data = train_d.n0,
-                          method='cubist', 
-                          trControl=fitControl)
-       
-        save(cb.model, file = "model_cb7.RData")
-        print(cb.model) 
-        plot(cb.model) #The final values used for the model were committees = 20 and neighbors = 5. 
-        
-        #Comput RSME for log of sales value (the estimate for RMSPE)
-        cb.pred6 = predict(cb.model, newdata=test_d.n0)
-        rmse.cb.pred6 = rmse(test_d.n0$Sales, cb.pred6);rmse.cb.pred6 #29%
-        
-        #Check that RMSPE is being computed correctly
-       # RMSPE.cb6 =  sqrt( (sum( (test_d.n0$Sales - cb.pred6)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.cb6 #56%
-        actual = exp(test_d.n0$Sales)
-        predicted =exp(cb.pred6)
-        RMSPE.cb6 = rmspe(actual,predicted); RMSPE.cb6 #36%
-        
+    gbmGrid <-  expand.grid(interaction.depth = 35,
+                            n.trees = 1500,
+                            shrinkage = .1,
+                            n.minobsinnode = 30
+    )
+    
+    gbm.model<- train(Sales ~  DayOfWeek +  Promo + promo2Days + Assortment  + StoreType +  CompetitionDistance, 
+                      data = train_d.n0,
+                      method = "gbm",
+                      metric = "RMSE",
+                      trControl = fitControl,
+                      tuneGrid = gbmGrid
+    )
+    
+    save(gbm.model, file = "model_gbm3.RData")
+    print(gbm.model) 
+    plot(gbm.model) 
+    
+    #Comput RSME for log of sales value (the estimate for RMSPE)
+    gbm.pred = predict(gbm.model, newdata=test_d.n0)
+    rmse.gbm.pred = rmse(test_d.n0$Sales, gbm.pred);rmse.gbm.pred #19.8%
+    
+    #Check that RMSPE is being computed correctly
+    # RMSPE.cb6 =  sqrt( (sum( (test_d.n0$Sales - cb.pred6)/test_d.n0$Sales )^2 ) / nrow(test_d.n0) ); RMSPE.cb6 #56%
+    actual = exp(test_d.n0$Sales)
+    predicted =exp(gbm.pred)
+    RMSPE.gbm = rmspe(actual,predicted); RMSPE.gbm #27%
+    
+    Sys.time()

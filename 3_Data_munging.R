@@ -165,3 +165,7 @@ str(f_test_store)
 colSums(is.na(f_train_store)) #it's OK if Promo2Since Week and Promo2SinceYear have NA's since we won't use them
 colSums(is.na(f_test_store)) 
 
+save(f_train_store, file = "f_train_store.RData")
+save(f_test_store, file = "f_test_store.RData")
+
+
