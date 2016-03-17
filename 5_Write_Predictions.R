@@ -88,7 +88,8 @@ library(Metrics)# for RSME
   qplot(gbm.test.predictions$Sales)
  
   
-  write.csv(gbm.pred, file = "C:/Users/jcotrell/Documents/Project 1/scorp_ross/output/Scorpian_gbm_predictions JC.csv")
-  
+  write.csv(gbm.test.predictions, file = "C:/Users/jcotrell/Documents/Project 1/scorp_ross/output/Scorpian_gbm_predictions_JC2.csv")
+
+
   
   
