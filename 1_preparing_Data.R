@@ -16,9 +16,9 @@ store <- fread("C:/Users/jcotrell/Documents/Project 1/scorp_ross/input_data/stor
   train$Date  = as.Date(train$Date,"%m/%d/%Y") #Note there is a bug in the Rossman.zip file; you must open and save train.csv in excel before this works
 
   
-#these lines probably aren't necessary and may not be desired
-  #train <- train[order(Date)] 
-  #test <- test[order(Date)]
+#Order the time series by date
+  train <- train[order(Date)] 
+  test <- test[order(Date)]
 
 
 #Condition the data in store.csv before merging
