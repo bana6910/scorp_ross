@@ -1,0 +1,38 @@
+library(data.table)
+library(zoo)
+library(forecast)
+library(ggplot2)
+
+setwd("C:\\Users\\kjwhite\\Desktop\\CU\\Practicum\\Data")
+read.csv("train.csv") 
+
+' tried building a loop and failed
+stores <- train[c(1)]
+uniqueStores <- unique(stores)
+results <- c()
+for(i in uniqueStores){
+  storeData <- data[test$storeName%in%(uniqueStores[1]),]
+  arimaModel <- auto.arima(storeData)
+  results(i) <- results
+
+' ARIMA on raw sales
+sales <- train[c(4)]
+arimaMod <- auto.arima(sales)
+plot(forecast(arimaMod, h=42000))
+
+' found a way to split into vectors by store (lapply didn't work)
+stores <- split(train$Sales, train$Store)
+lapply(stores, auto.arima)
+
+' ran models on individual store data
+aMod492 <- auto.arima(store492)
+plot(forecast(aMod492, h=42))
+
+aMod6 <- auto.arima(store6)
+plot(forecast(aMod6, h=42))
+
+aMod793 <- auto.arima(store793)
+plot(forecast(aMod793, h=42))
+
+' figured out how to create 1000 models!!! now i just to figure out how to make 1000 predictions
+models <- by(train$Sales, train$Store, auto.arima)
