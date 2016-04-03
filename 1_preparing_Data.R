@@ -4,6 +4,7 @@
 library(data.table)
 library(zoo)
 
+
 library(forecast)
 library(ggplot2)
 
@@ -17,9 +18,8 @@ store <- fread("C:/Users/jcotrell/Documents/Project 1/scorp_ross/input_data/stor
 
   
 #Order the time series by date
-  train <- train[order(Date)] 
-  test <- test[order(Date)]
-
+  train <- train[order(Date),] 
+  test <- test[order(Date),]
 
 #Condition the data in store.csv before merging
   # In store.csv Convert the CompetitionOpenSince... variables to one Date variable
