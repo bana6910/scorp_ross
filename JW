@@ -2,11 +2,12 @@ library(data.table)
 library(zoo)
 library(forecast)
 library(ggplot2)
+library(plyr)
 
 setwd("C:\\Users\\kjwhite\\Desktop\\CU\\Practicum\\Data")
 read.csv("train.csv") 
 
-' tried building a loop and failed
+# failed loop
 stores <- train[c(1)]
 uniqueStores <- unique(stores)
 results <- c()
@@ -14,17 +15,18 @@ for(i in uniqueStores){
   storeData <- data[test$storeName%in%(uniqueStores[1]),]
   arimaModel <- auto.arima(storeData)
   results(i) <- results
+}
 
-' ARIMA on raw sales
-sales <- train[c(4)]
+# arima on whole data set
+  sales <- train[c(4)]
 arimaMod <- auto.arima(sales)
 plot(forecast(arimaMod, h=42000))
 
-' found a way to split into vectors by store (lapply didn't work)
+# playing with lapply
 stores <- split(train$Sales, train$Store)
 lapply(stores, auto.arima)
 
-' ran models on individual store data
+# individual store arima models
 aMod492 <- auto.arima(store492)
 plot(forecast(aMod492, h=42))
 
@@ -34,5 +36,31 @@ plot(forecast(aMod6, h=42))
 aMod793 <- auto.arima(store793)
 plot(forecast(aMod793, h=42))
 
-' figured out how to create 1000 models!!! now i just to figure out how to make 1000 predictions
-models <- by(train$Sales, train$Store, auto.arima)
+# trying to use lapply instead of loop
+storeSales <- split(train$Sales, train$Store)
+fits <- lapply(storeSales, function(x) auto.arima(x, allowdrift=FALSE))
+result <- lapply(fits, function(x) predict(x, n.ahead = 42))
+print(result)   
+
+
+# nStores <- 3 # Predict just 3 stores to make sure things work
+# train <- train[train$Store <= nStores,]
+
+##### Working 1000 ARIMA models #####
+storeSales <- split(train$Sales, train$Store)
+fits <- lapply(storeSales, function(x) auto.arima(x, D=30, allowdrift=FALSE))
+result <- lapply(fits, function(x) predict(x, n.ahead = 42))
+
+rawPredictions <- as.data.frame(lapply(result, function(x) as.numeric(x$pred)))
+names(rawPredictions) <- c(1:storeSales) # rename columns by Store number
+
+library(reshape2)
+rawPredictions$Day = 1:42
+pred <- melt(rawPredictions, id.vars = c("Day"))
+names(pred) <- c("Day", "Store", "Sales")
+
+write.csv(pred, "C:/Users/kjwhite/Desktop/CU/Practicum/pred.csv") 
+
+# Plot for each store (fill in [[]] with store number)
+plot(forecast(fits[[88]], h=42))
+
