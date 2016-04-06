@@ -2,7 +2,6 @@ library(data.table)
 library(zoo)
 library(forecast)
 library(ggplot2)
-library(plyr)
 
 setwd("C:\\Users\\kjwhite\\Desktop\\CU\\Practicum\\Data")
 read.csv("train.csv") 
