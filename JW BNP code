@@ -1,0 +1,106 @@
+Enter file contents herelibrary(caret)
+library(ggplot2)
+library(forecast)
+library(randomForest)
+library(Hmisc)
+library(corrplot)
+library(DMwR)
+
+
+str(train)
+
+
+####impute with median#####does not work###
+numerics <- train1[c(-4,-23,-25,-31,-32,-48,-53,-57,-67,-72,-75,-76,-80,-92,-108,-111,-113,-114,-126)]
+imputedNumerics <- impute(numerics)
+
+####impute with knn#####
+trainImputed <- knnImputation(train, k=10, scale=T, meth = "weighAvg")
+testImputed <- knnImputation(test, k=10, scale=T, meth = "weighAvg")
+
+
+
+#######EDA##########
+attach(train1)
+plot(target, v50, main="target vs. v50")
+
+numerics1 <- imputedNumerics[c(1:11)]
+numerics2 <- imputedNumerics[c(1,12:21)]
+numerics3 <- imputedNumerics[c(1,22:31)]
+numerics4 <- imputedNumerics[c(1,32:41)]
+numerics5 <- imputedNumerics[c(1,42:51)]
+numerics6 <- imputedNumerics[c(1,52:61)]
+numerics7 <- imputedNumerics[c(1,62:71)]
+numerics8 <- imputedNumerics[c(1,72:81)]
+numerics9 <- imputedNumerics[c(1,82:91)]
+numerics10 <- imputedNumerics[c(1,92:101)]
+numerics11 <- imputedNumerics[c(1,102:111)]
+
+cor.numerics <- cor(imputedNumerics)
+cor.numerics1 <- cor(numerics1)
+cor.numerics2 <- cor(numerics2)
+cor.numerics3 <- cor(numerics3)
+cor.numerics4 <- cor(numerics4)
+cor.numerics5 <- cor(numerics5)
+cor.numerics6 <- cor(numerics6)
+cor.numerics7 <- cor(numerics7)
+cor.numerics8 <- cor(numerics8)
+cor.numerics9 <- cor(numerics9)
+cor.numerics10 <- cor(numerics10)
+cor.numerics11 <- cor(numerics11)
+
+corrplot(cor.numerics, method = "number")
+corrplot(cor.numerics1, method="number")
+corrplot(cor.numerics2, method="number")
+corrplot(cor.numerics3, method="number")
+corrplot(cor.numerics4, method="number")
+corrplot(cor.numerics5, method="number")
+corrplot(cor.numerics6, method="number")
+corrplot(cor.numerics7, method="number")
+corrplot(cor.numerics8, method="number")
+corrplot(cor.numerics9, method="number")
+corrplot(cor.numerics10, method="number")
+corrplot(cor.numerics11, method="number")
+
+setwd("C:/Users/kjwhite/Desktop/CU/Practicum/BNP Paribas")
+write.csv(cor.numerics, file = "cornumerics.csv")
+
+
+
+
+# gbm
+fit.gbm1 <- gbm(target ~ ., data=train1, n.tree = 400,
+                shrinkage = 1, train.fraction = (2/12))
+
+
+# random forest using randomForest pkg
+para.rf <- randomForest(target ~ ., data=train1, importance=TRUE,
+                        proximity=TRUE)
+print(iris.rf)
+
+
+# caret stuff that is failing
+set.seed(998)
+inTraining <- createDataPartition(train1$target, p = .50, list = FALSE)
+training <- train1[ inTraining,]
+testing  <- train1[-inTraining,]
+
+set.seed(825)
+gbmFit1 <- train(target ~ ., data = training,
+                 method = "gbm",
+                 trControl = fitControl,
+                 verbose = FALSE)
+gbmFit1
+
+rf.model6 = train(target ~.,   
+                  method = "rf", 
+                  data = train_d.n0, 
+                  trControl=fitControl) 
+
+noNames <- dummyVars(~ day + time + day:time,
+                     data = when,
+                     levelsOnly = TRUE)
+
+str(test1)
+summary(test1)
+                  
